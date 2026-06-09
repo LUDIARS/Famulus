@@ -1,0 +1,39 @@
+{
+  "name": "@ludiars/famulus",
+  "version": "0.1.0",
+  "description": "Local LLM spawner + black-box model switcher (LUDIARS / Fa)",
+  "type": "module",
+  "bin": {
+    "famulus": "bin/famulus.mjs"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "famulus": "tsx src/cli.ts",
+    "test": "node --test --import tsx tests/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.3"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LUDIARS/Famulus.git"
+  }
+}
