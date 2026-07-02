@@ -17,6 +17,6 @@ export interface ModelChoice {
   modelId: string;
   /** 選択理由 (短文)。 */
   reasoning: string;
-  /** 決定方法: project 完全一致 / Sonnet 判断 / フォールバック。 */
-  source: "exact-match" | "sonnet" | "fallback";
+  /** 決定方法: project 完全一致 / 卒業ルール / Sonnet 判断 / フォールバック。 */
+  source: "exact-match" | "rule" | "sonnet" | "fallback";
 }

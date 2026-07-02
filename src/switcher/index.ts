@@ -5,7 +5,9 @@
  * 決定ロジック:
  *   1. レジストリから候補を集める (project 一致 FT + 汎用)。
  *   2. project 完全一致の FT がちょうど 1 つ → それを即採用 (LLM 不要)。
- *   3. 候補が複数で曖昧 → Sonnet ワンショットで選ばせる。
+ *   3. 候補が複数で曖昧 → 成長型ブラックボックス (blackbox.ts) 経由:
+ *      卒業ルール (project→modelId) があれば Sonnet を呼ばず即決、
+ *      無ければ Sonnet ワンショットで選ばせ、その選択を教師にルールを育てる。
  *   4. Sonnet が使えない / 候補ゼロ → 決定論的フォールバック (sort_order 先頭 or 既定)。
  *
  * spec/famulus.md §2。
@@ -13,6 +15,7 @@
 
 import { list, type FtModel } from "./registry.js";
 import { selectViaSonnet } from "./select.js";
+import { decidePickViaBlackbox, type SelectFn } from "./blackbox.js";
 import type { ModelChoice, SelectContext } from "./types.js";
 
 export type { FtModel } from "./registry.js";
@@ -46,6 +49,7 @@ export async function pickModel(
   ctx: SelectContext,
   fallbackModel = "gemma4:12b",
   env: NodeJS.ProcessEnv = process.env,
+  selectFn: SelectFn = selectViaSonnet,
 ): Promise<ModelChoice> {
   const all = list(env);
   const candidates = candidatesFor(ctx.project, all);
@@ -61,10 +65,12 @@ export async function pickModel(
     return { modelId: exact[0].model_id, reasoning: `project=${p} 完全一致の FT`, source: "exact-match" };
   }
 
-  // 曖昧 → Sonnet ワンショット。
-  const sel = await selectViaSonnet(ctx, candidates, env);
-  if (sel) {
-    return { modelId: sel.model_id, reasoning: sel.reasoning || "Sonnet 選択", source: "sonnet" };
+  // 曖昧 → blackbox (卒業ルール即決 / 無ければ Sonnet を教師に学習)。
+  try {
+    const viaBlackbox = await decidePickViaBlackbox(ctx, candidates, env, selectFn);
+    if (viaBlackbox) return viaBlackbox;
+  } catch {
+    /* blackbox 側の想定外failも modelId 確定は止めない */
   }
 
   // フォールバック: 候補先頭 (sort_order 昇順済)。

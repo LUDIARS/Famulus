@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   build-test:
@@ -19,14 +20,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # @ludiars scope (GitHub Packages) は組織内パッケージをビルトイン
+      # GITHUB_TOKEN (packages:read) で取得する。
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@ludiars'
 
       - name: Install deps
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build (tsc)
         run: npm run build
