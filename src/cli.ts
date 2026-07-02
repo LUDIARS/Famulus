@@ -13,6 +13,9 @@
 import { spawn } from "./spawner.js";
 import { pickModel } from "./switcher/index.js";
 import { add as addModel, list as listModels, remove as removeModel, type FtModel } from "./switcher/registry.js";
+import {
+  listPendingDecisions, listPickRules, pickStats, recordPickVerdict,
+} from "./switcher/blackbox.js";
 
 const HELP = `famulus — local LLM spawner + black-box model switcher (LUDIARS / Fa)
 
@@ -25,6 +28,10 @@ Usage:
   famulus models add --id <tag> --label <text> [--project <code>] [--ft]
                               [--base <model>] [--notes <text>] [--sort <n>]
   famulus models remove --id <tag>
+  famulus blackbox pending    モデル選択のレビュー待ち判断を一覧 (成長型ブラックボックス)
+  famulus blackbox ok --id <n> / ng --id <n>
+                              判断に OK/NG (OK×3 でルール卒業 = Sonnet 不要化)
+  famulus blackbox rules      選択ルール一覧 + 卒業メトリクス
   famulus --help | --version
 `;
 
@@ -115,6 +122,61 @@ function cmdModels(args: string[]): void {
   process.exit(2);
 }
 
+function cmdBlackbox(args: string[]): void {
+  const [sub, ...rest] = args;
+  if (sub === "pending" || sub === undefined) {
+    const items = listPendingDecisions();
+    if (items.length === 0) {
+      process.stdout.write("(レビュー待ちなし)\n");
+      return;
+    }
+    for (const d of items) {
+      const out = d.output as { modelId?: string } | null;
+      process.stdout.write(`#${d.id}\t${d.source}\t${out?.modelId ?? "?"}\t${d.rationale}\n`);
+    }
+    return;
+  }
+  if (sub === "ok" || sub === "ng") {
+    const f = parseFlags(rest);
+    const id = Number(f.get("id"));
+    if (!Number.isInteger(id)) {
+      process.stderr.write(`famulus: blackbox ${sub} は --id <n> が必須\n`);
+      process.exit(2);
+    }
+    const res = recordPickVerdict(id, sub);
+    if (!res.ok) {
+      process.stdout.write(`not found: #${id}\n`);
+      return;
+    }
+    process.stdout.write(
+      res.ruleUpdated
+        ? `${sub}: #${id} → ルール「${res.ruleUpdated.description}」 state=${res.ruleUpdated.state} (OK ${res.ruleUpdated.approvals} / NG ${res.ruleUpdated.rejections})\n`
+        : `${sub}: #${id}\n`,
+    );
+    return;
+  }
+  if (sub === "rules") {
+    const rules = listPickRules();
+    if (rules.length === 0) {
+      process.stdout.write("(ルールなし)\n");
+    } else {
+      for (const r of rules) {
+        const out = r.output as { modelId?: string } | null;
+        process.stdout.write(
+          `${r.state}\t${out?.modelId ?? "?"}\t${r.description}\t影 +${r.shadowAgreements}/-${r.shadowConflicts}\tOK ${r.approvals} NG ${r.rejections}\n`,
+        );
+      }
+    }
+    const s = pickStats();
+    process.stdout.write(
+      `卒業メトリクス: 直近 ${s.window} 判断中 ルール ${s.ruleDecisions} / LLM ${s.llmDecisions} (被覆率 ${Math.round(s.ruleCoverage * 100)}%)\n`,
+    );
+    return;
+  }
+  process.stderr.write(`famulus: unknown blackbox subcommand '${sub}'\n\n${HELP}`);
+  process.exit(2);
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const [cmd, ...rest] = argv;
@@ -137,6 +199,9 @@ async function main(): Promise<void> {
       return;
     case "models":
       cmdModels(rest);
+      return;
+    case "blackbox":
+      cmdBlackbox(rest);
       return;
     default:
       process.stderr.write(`famulus: unknown command '${cmd}'\n\n${HELP}`);

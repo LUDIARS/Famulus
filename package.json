@@ -35,5 +35,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/LUDIARS/Famulus.git"
+  },
+  "dependencies": {
+    "@ludiars/blackbox": "^0.1.1"
   }
 }
