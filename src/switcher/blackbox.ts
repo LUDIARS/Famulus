@@ -75,7 +75,6 @@ export async function decidePickViaBlackbox(
   const allowed = new Set(candidates.map((c) => c.model_id));
   const input: PickInput = { project: String(features.project), task: ctx.task };
 
-  let sonnetFailed = false;
   let result: { decision: { output: PickOutput; source: "rule" | "llm"; rationale: string }; decisionId: number };
   try {
     result = await bb.engine.decide<PickInput, PickOutput>(
@@ -83,7 +82,6 @@ export async function decidePickViaBlackbox(
       async () => {
         const sel = await selectFn(ctx, candidates, env);
         if (!sel) {
-          sonnetFailed = true;
           throw new Error("sonnet unavailable");
         }
         const project = String(features.project);
@@ -106,7 +104,6 @@ export async function decidePickViaBlackbox(
   } catch {
     return null; // Sonnet 不可 (or 予期せぬ失敗) → 呼び出し側フォールバック
   }
-  void sonnetFailed;
 
   const { decision, decisionId } = result;
   const modelId = decision.output?.modelId;
