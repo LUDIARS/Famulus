@@ -1,0 +1,14 @@
+{
+  "name": "model-runtime",
+  "description": "モデル実行。 Ollama 呼び出しとモデル切替。",
+  "presetRules": [],
+  "templateRules": [],
+  "membership": [
+    {
+      "pathPattern": "(^|/)src/ollama\\.ts$"
+    },
+    {
+      "pathPattern": "(^|/)src/switcher/(?:.*/)?[^/]+$"
+    }
+  ]
+}

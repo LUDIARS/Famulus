@@ -1,0 +1,11 @@
+{
+  "name": "process-spawn",
+  "description": "子プロセスの起動。 外部コマンドの実行と hook。",
+  "presetRules": [],
+  "templateRules": [],
+  "membership": [
+    {
+      "pathPattern": "(^|/)src/(?:spawner|hooks)\\.ts$"
+    }
+  ]
+}

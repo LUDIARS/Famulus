@@ -1,0 +1,11 @@
+{
+  "name": "local-agent-repl",
+  "description": "ローカルエージェントの対話。 REPL、 圧縮 (compaction)、 transcript の保持。",
+  "presetRules": [],
+  "templateRules": [],
+  "membership": [
+    {
+      "pathPattern": "(^|/)src/(?:repl|compaction|transcript)\\.ts$"
+    }
+  ]
+}

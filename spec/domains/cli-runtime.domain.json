@@ -1,0 +1,14 @@
+{
+  "name": "cli-runtime",
+  "description": "CLI 入口と設定、 自動テスト。",
+  "presetRules": [],
+  "templateRules": [],
+  "membership": [
+    {
+      "pathPattern": "(^|/)src/(?:cli|config|index)\\.ts$"
+    },
+    {
+      "pathPattern": "(^|/)tests?/(?:.*/)?[^/]+$"
+    }
+  ]
+}
