@@ -3,12 +3,16 @@
   "description": "モデル実行。 Ollama 呼び出しとモデル切替。",
   "presetRules": [],
   "templateRules": [],
+  "specRefs": ["spec/famulus.md", "spec/feature/shared-one-shot.md"],
   "membership": [
     {
       "pathPattern": "(^|/)src/ollama\\.ts$"
     },
     {
       "pathPattern": "(^|/)src/switcher/(?:.*/)?[^/]+$"
+    },
+    {
+      "pathPattern": "(^|/)tests/(?:switcher|blackbox)\\.test\\.ts$"
     }
   ]
 }

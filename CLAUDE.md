@@ -7,7 +7,8 @@ LUDIARS short code: **Fa**. ローカル LLM スポナー + 黒箱モデル切�
 
 - Node ≥ 22 (global `fetch` / `WebSocket`)、TypeScript strict。**ランタイム依存ゼロ**
   (node 組み込みのみ)。新規依存は prebuild 必須・gyp-from-source 禁止。
-  例外: `@ludiars/blackbox` (Lapilli 内製・それ自体が依存ゼロの純 TS) のみ許容。
+  例外: `@ludiars/blackbox` と `@ludiars/one-shot` (Lapilli 内製・外部ランタイム依存なし)。
+  `one-shot` は全リポ共通化の依頼に基づく単発 CLI 起動境界。
   永続化も SQLite でなく JSON ファイル (`~/.famulus/blackbox.json`) で依存ゼロを維持。
 - テストは `node:test` via `tsx` (`npm test`)。vitest/jest は使わない。
 - SRP + ファイル分割を守る ([[feedback_coding_conventions]])。スポナーと切り替え機を混ぜない。

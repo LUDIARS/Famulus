@@ -37,6 +37,7 @@
     "url": "https://github.com/LUDIARS/Famulus.git"
   },
   "dependencies": {
+    "@ludiars/one-shot": "file:lib/lapilli/packages/one-shot",
     "@ludiars/blackbox": "^0.1.1"
   }
 }

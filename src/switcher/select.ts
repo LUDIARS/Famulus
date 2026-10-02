@@ -9,11 +9,11 @@
  * spec/famulus.md §2。
  */
 
-import { spawn } from "node:child_process";
+import { spawnOneShot as spawn } from "@ludiars/one-shot";
 import type { FtModel } from "./registry.js";
 import type { SelectContext } from "./types.js";
 
-const SONNET_MODEL = "claude-sonnet-4-6";
+const SONNET_MODEL = "sonnet";
 const SELECT_TIMEOUT_MS = 60_000;
 
 /** Sonnet に渡す選択プロンプトを組み立てる。 */
@@ -67,23 +67,12 @@ export async function selectViaSonnet(
   const prompt = buildSelectPrompt(ctx, candidates);
   const allowed = new Set(candidates.map((c) => c.model_id));
 
-  const childEnv = { ...env };
-  // Windows: claude CLI は git-bash path が要る。未設定なら一般的な場所を試す。
-  if (process.platform === "win32" && !childEnv.CLAUDE_CODE_GIT_BASH_PATH) {
-    childEnv.CLAUDE_CODE_GIT_BASH_PATH = "C:\\Program Files\\Git\\bin\\bash.exe";
-  }
-
   return new Promise((resolve) => {
-    // Windows は claude が .cmd なので cmd.exe 経由で起動 (shell:true の args 連結
-    // による deprecation/インジェクションを避ける。args は定数だが明示分離する)。
-    const isWin = process.platform === "win32";
-    const file = isWin ? childEnv.ComSpec ?? "cmd.exe" : "claude";
-    const cliArgs = isWin
-      ? ["/d", "/s", "/c", "claude", "-p", "--model", SONNET_MODEL]
-      : ["-p", "--model", SONNET_MODEL];
+    // Lapilli resolves the model role and the native CLI without a command shell.
+    const cliArgs = ["-p", "--model", SONNET_MODEL];
     let child;
     try {
-      child = spawn(file, cliArgs, { env: childEnv });
+      child = spawn("claude", cliArgs, { env, cwd: process.cwd() });
     } catch {
       resolve(null);
       return;
